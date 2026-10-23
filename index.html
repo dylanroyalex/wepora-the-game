@@ -182,7 +182,7 @@
                     </svg>
                     <span class="text-[8px] font-bold text-slate-600 scale-90">Esmeralda</span>
                 </div>
-                <div id="mat-silver" class="w-11 h-10 rounded-lg bg-slate-100 border-2 border-slate-300 flex flex-col items-center justify-center transition-all" title="Plata Ley 925">
+                <div id="mat-silver" class="w-11 h-10 rounded-lg bg-slate-100 border-2 border-slate-300 flex flex-col items-center justify-center transition-all" title="Plata">
                     <svg class="w-4 h-4 text-slate-600 opacity-30 transition-opacity" id="icon-silver" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M19 5H5L2 12l3 7h14l3-7-3-7z"/>
                     </svg>
@@ -317,7 +317,7 @@
             </div>
 
             <p class="text-[11px] sm:text-xs text-slate-200 leading-relaxed mb-4">
-                "¡Lo lograste! Con la <strong>Esmeralda Muzo</strong>, la <strong>Plata Ley 925</strong> y el <strong>Hilo Imán</strong>, creamos una pieza única." <br><span class="text-amber-300 font-bold">— Maestro Wilder Parra</span>
+                "¡Lo lograste! Con la <strong>Esmeralda Muzo</strong>, la <strong>Plata</strong> y el <strong>Hilo Imán</strong>, creamos una pieza única." <br><span class="text-amber-300 font-bold">— Maestro Wilder Parra</span>
             </p>
 
             <div id="victory-stats" class="bg-slate-900 rounded-xl p-2.5 mb-4 border border-slate-700 text-xs text-slate-200 flex justify-around">
@@ -561,7 +561,7 @@ function initWorld() {
         },
         {
             id: 'silver',
-            name: 'ARGENTAGRON (Coloso Plata 925)',
+            name: 'ARGENTAGRON (Coloso Plata)',
             typeLabel: 'ACERO / ROCA',
             badgeColor: '#475569',
             zone: ZONES.west,
@@ -569,7 +569,7 @@ function initWorld() {
             r: 44, hp: 320, maxHp: 320,
             color: '#94a3b8', accent: '#38bdf8',
             speed: 2.2, timer: 0, dashVx: 0, dashVy: 0, hitFlash: 0,
-            dropName: 'Plata Ley 925', alive: true
+            dropName: 'Plata', alive: true
         },
         {
             id: 'thread',
@@ -736,7 +736,7 @@ function openWilderDialogue() {
     } else if (count < 3) {
         const missing = [];
         if (!m.emerald) missing.push("Esmeralda Muzo");
-        if (!m.silver) missing.push("Plata 925");
+        if (!m.silver) missing.push("Plata");
         if (!m.thread) missing.push("Hilo Imán");
         textEl.innerHTML = `¡Bien! Tienes <strong>${count} de 3</strong> materiales. Falta conseguir: <span class="text-emerald-700 font-bold">${missing.join(', ')}</span>. ¡PS restaurados!`;
         btnEl.innerHTML = `<span>Continuar</span> <span>▼</span>`;
@@ -1110,7 +1110,7 @@ function draw() {
     drawNaturePaths();
     drawNatureArena(ZONES.hub, '#66bb6a', '#fde047', 'CLARO DE WILDER PARRA');
     drawNatureArena(ZONES.north, '#2e7d32', '#34d399', 'ARBOLEDA ESMERALDA DE MUZO');
-    drawNatureArena(ZONES.west, '#64748b', '#e2e8f0', 'CLARO ROCOSO DE PLATA 925');
+    drawNatureArena(ZONES.west, '#64748b', '#e2e8f0', 'CLARO ROCOSO DE PLATA');
     drawNatureArena(ZONES.east, '#581c87', '#e879f9', 'JARDÍN MAGNÉTICO DE CUARZO');
 
     drawCrystalPond(CENTER - 175, CENTER + 85);
