@@ -21,6 +21,8 @@
             overflow: hidden;
             user-select: none;
             -webkit-user-select: none;
+            width: 100vw;
+            height: 100vh;
         }
         .font-cinzel { font-family: 'Cinzel', serif; }
         .font-pixel { font-family: 'Press Start 2P', monospace; }
@@ -43,11 +45,11 @@
             background: rgba(248, 250, 252, 0.94);
             color: #1e293b;
             border: 3px solid #1e293b;
-            border-radius: 14px;
-            box-shadow: 0 6px 0 #0f172a, 0 10px 20px rgba(0,0,0,0.35), inset 0 0 0 3px #cbd5e1;
+            border-radius: 12px;
+            box-shadow: 0 4px 0 #0f172a, 0 8px 16px rgba(0,0,0,0.35), inset 0 0 0 2px #cbd5e1;
         }
         .poke-dark-panel {
-            background: rgba(15, 23, 42, 0.9);
+            background: rgba(15, 23, 42, 0.92);
             backdrop-filter: blur(6px);
             border: 3px solid #f8fafc;
             border-radius: 14px;
@@ -71,11 +73,11 @@
         .slot-obtained {
             border-color: #059669 !important;
             background: #d1fae5 !important;
-            box-shadow: 0 0 12px rgba(16, 185, 129, 0.6);
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
         }
         @keyframes pulseGlow {
             0%, 100% { filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.8)); }
-            50% { filter: drop-shadow(0 0 18px rgba(52, 211, 153, 1)); }
+            50% { filter: drop-shadow(0 0 16px rgba(52, 211, 153, 1)); }
         }
         .emerald-glow-anim {
             animation: pulseGlow 2.5s infinite ease-in-out;
@@ -84,264 +86,248 @@
         @media (pointer: coarse) {
             #touch-controls { display: flex; }
         }
+        /* Landscape Orientation Warning for Mobile Portrait */
+        #rotate-warning {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: #064e3b;
+            z-index: 100;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            text-align: center;
+        }
+        @media screen and (orientation: portrait) and (max-width: 900px) {
+            #rotate-warning { display: flex; }
+        }
     </style>
 </head>
 <body>
+
+<!-- MOBILE LANDSCAPE ENFORCER WARNING -->
+<div id="rotate-warning">
+    <div class="w-20 h-20 mb-4 rounded-2xl bg-emerald-900 border-2 border-emerald-400 flex items-center justify-center animate-bounce">
+        <svg class="w-12 h-12 text-amber-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+        </svg>
+    </div>
+    <h2 class="font-cinzel text-xl font-extrabold text-white mb-2">¡Gira tu dispositivo!</h2>
+    <p class="text-xs text-emerald-200 max-w-xs leading-relaxed">
+        Para disfrutar al máximo de <strong>Wepora: El Legado de la Esmeralda</strong> con controles táctiles y vista panorámica, por favor coloca tu celular en horizontal.
+    </p>
+</div>
 
 <div id="game-container">
     <!-- MAIN CANVAS -->
     <canvas id="gameCanvas"></canvas>
 
     <!-- TOP HUD: POKÉMON STYLE STATUS, BOSS BAR & RELICS -->
-    <div id="hud" class="hidden absolute top-0 left-0 w-full p-2.5 md:p-4 flex flex-wrap justify-between items-start pointer-events-none z-10 gap-2">
+    <div id="hud" class="hidden absolute top-0 left-0 w-full p-2 md:p-3 flex flex-wrap justify-between items-start pointer-events-none z-10 gap-2">
         
         <!-- Player Pokémon-style Status Box -->
-        <div class="poke-panel p-3 flex flex-col gap-1.5 min-w-[240px] pointer-events-auto">
+        <div class="poke-panel p-2.5 flex flex-col gap-1 min-w-[210px] sm:min-w-[230px] pointer-events-auto scale-90 sm:scale-100 origin-top-left">
             <div class="flex items-center justify-between border-b border-slate-300 pb-1">
                 <div class="flex items-center gap-1.5">
-                    <span class="px-1.5 py-0.5 bg-emerald-600 text-white font-pixel text-[9px] rounded">Nv.50</span>
-                    <span class="font-bold text-xs text-slate-800 tracking-tight">BUSCADOR WEPORA</span>
+                    <span class="px-1.5 py-0.5 bg-emerald-600 text-white font-pixel text-[8px] rounded">Nv.50</span>
+                    <span class="font-bold text-[11px] text-slate-800 tracking-tight">BUSCADOR WEPORA</span>
                 </div>
-                <span id="zone-indicator" class="text-[10px] bg-emerald-100 text-emerald-800 font-semibold px-2 py-0.5 rounded-full border border-emerald-300">Claro Central</span>
+                <span id="zone-indicator" class="text-[9px] bg-emerald-100 text-emerald-800 font-semibold px-2 py-0.5 rounded-full border border-emerald-300">Claro Central</span>
             </div>
             <!-- HP Bar -->
-            <div class="flex items-center gap-2 mt-0.5">
-                <span class="font-pixel text-[9px] bg-slate-800 text-amber-400 px-1.5 py-0.5 rounded">PS</span>
-                <div class="flex-1 bg-slate-800 h-4 rounded-full p-0.5 relative overflow-hidden">
+            <div class="flex items-center gap-1.5 mt-0.5">
+                <span class="font-pixel text-[8px] bg-slate-800 text-amber-400 px-1 py-0.5 rounded">PS</span>
+                <div class="flex-1 bg-slate-800 h-3.5 rounded-full p-0.5 relative overflow-hidden">
                     <div id="hp-bar" class="bg-emerald-500 h-full rounded-full transition-all duration-200" style="width: 100%;"></div>
                 </div>
-                <span id="hp-text" class="font-pixel text-[9px] text-slate-700 min-w-[54px] text-right">100/100</span>
+                <span id="hp-text" class="font-pixel text-[8px] text-slate-700 min-w-[48px] text-right">100/100</span>
             </div>
             <!-- Moves & Dash Info -->
-            <div class="flex items-center justify-between text-[10px] text-slate-600 font-semibold pt-0.5">
-                <div class="flex items-center gap-1.5">
-                    <span>Ataque Rápido (Shift):</span>
-                    <div class="w-14 bg-slate-300 h-2 rounded-full overflow-hidden border border-slate-400">
+            <div class="flex items-center justify-between text-[9px] text-slate-600 font-semibold pt-0.5">
+                <div class="flex items-center gap-1">
+                    <span>Dash (Shift):</span>
+                    <div class="w-12 bg-slate-300 h-2 rounded-full overflow-hidden border border-slate-400">
                         <div id="dash-bar" class="bg-sky-500 h-full" style="width: 100%;"></div>
                     </div>
                 </div>
-                <span class="text-emerald-700 font-bold">Click/Espacio: Hoja Gema</span>
+                <span class="text-emerald-700 font-bold">Hoja Gema</span>
             </div>
         </div>
 
         <!-- Pokémon Boss Health Bar -->
-        <div id="boss-hud" class="hidden poke-panel p-3 flex-col min-w-[280px] md:min-w-[390px] border-slate-800">
+        <div id="boss-hud" class="hidden poke-panel p-2.5 flex-col min-w-[240px] sm:min-w-[320px] border-slate-800 scale-90 sm:scale-100 origin-top">
             <div class="flex items-center justify-between w-full mb-1">
                 <div class="flex items-center gap-2">
-                    <span id="boss-type-badge" class="px-2 py-0.5 rounded text-[9px] font-pixel text-white bg-emerald-600 uppercase">ROCA/PLANTA</span>
-                    <h3 id="boss-name" class="font-bold text-xs md:text-sm text-slate-900 tracking-tight">ESMERALDÓN</h3>
+                    <span id="boss-type-badge" class="px-1.5 py-0.5 rounded text-[8px] font-pixel text-white bg-emerald-600 uppercase">ROCA/PLANTA</span>
+                    <h3 id="boss-name" class="font-bold text-xs text-slate-900 tracking-tight">ESMERALDÓN</h3>
                 </div>
-                <span class="font-pixel text-[10px] text-slate-700">Nv.70 ★</span>
+                <span class="font-pixel text-[9px] text-slate-700">Nv.70 ★</span>
             </div>
-            <div class="w-full flex items-center gap-2">
-                <span class="font-pixel text-[9px] bg-slate-800 text-amber-400 px-1.5 py-0.5 rounded">PS</span>
-                <div class="flex-1 bg-slate-800 h-4 rounded-full p-0.5 overflow-hidden">
+            <div class="w-full flex items-center gap-1.5">
+                <span class="font-pixel text-[8px] bg-slate-800 text-amber-400 px-1 py-0.5 rounded">PS</span>
+                <div class="flex-1 bg-slate-800 h-3.5 rounded-full p-0.5 overflow-hidden">
                     <div id="boss-hp-bar" class="bg-emerald-500 h-full rounded-full transition-all duration-150" style="width: 100%;"></div>
                 </div>
             </div>
         </div>
 
         <!-- Materials Inventory Bag -->
-        <div class="poke-panel p-2.5 flex flex-col gap-1 pointer-events-auto">
-            <div class="text-[10px] font-bold text-slate-700 uppercase tracking-wider text-center">Mochila Wepora (3 Reliquias)</div>
-            <div class="flex items-center gap-2">
-                <div id="mat-emerald" class="w-14 h-12 rounded-lg bg-slate-100 border-2 border-slate-300 flex flex-col items-center justify-center transition-all" title="Esmeralda Muzo Pura (Norte)">
-                    <svg class="w-5 h-5 text-emerald-600 opacity-30 transition-opacity" id="icon-emerald" viewBox="0 0 24 24" fill="currentColor">
+        <div class="poke-panel p-2 flex flex-col gap-0.5 pointer-events-auto scale-90 sm:scale-100 origin-top-right">
+            <div class="text-[9px] font-bold text-slate-700 uppercase tracking-wider text-center">Mochila Wepora</div>
+            <div class="flex items-center gap-1.5">
+                <div id="mat-emerald" class="w-11 h-10 rounded-lg bg-slate-100 border-2 border-slate-300 flex flex-col items-center justify-center transition-all" title="Esmeralda Muzo Pura">
+                    <svg class="w-4 h-4 text-emerald-600 opacity-30 transition-opacity" id="icon-emerald" viewBox="0 0 24 24" fill="currentColor">
                         <polygon points="12 2 19 7 19 17 12 22 5 17 5 7 12 2"/>
                     </svg>
-                    <span class="text-[9px] font-bold text-slate-600">Esmeralda</span>
+                    <span class="text-[8px] font-bold text-slate-600 scale-90">Esmeralda</span>
                 </div>
-                <div id="mat-silver" class="w-14 h-12 rounded-lg bg-slate-100 border-2 border-slate-300 flex flex-col items-center justify-center transition-all" title="Plata (Oeste)">
-                    <svg class="w-5 h-5 text-slate-600 opacity-30 transition-opacity" id="icon-silver" viewBox="0 0 24 24" fill="currentColor">
+                <div id="mat-silver" class="w-11 h-10 rounded-lg bg-slate-100 border-2 border-slate-300 flex flex-col items-center justify-center transition-all" title="Plata Ley 925">
+                    <svg class="w-4 h-4 text-slate-600 opacity-30 transition-opacity" id="icon-silver" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M19 5H5L2 12l3 7h14l3-7-3-7z"/>
                     </svg>
-                    <span class="text-[9px] font-bold text-slate-600">Plata</span>
+                    <span class="text-[8px] font-bold text-slate-600 scale-90">Plata</span>
                 </div>
-                <div id="mat-thread" class="w-14 h-12 rounded-lg bg-slate-100 border-2 border-slate-300 flex flex-col items-center justify-center transition-all" title="Hilo e Imán Ancestral (Este)">
-                    <svg class="w-5 h-5 text-purple-600 opacity-30 transition-opacity" id="icon-thread" viewBox="0 0 24 24" fill="currentColor">
+                <div id="mat-thread" class="w-11 h-10 rounded-lg bg-slate-100 border-2 border-slate-300 flex flex-col items-center justify-center transition-all" title="Hilo e Imán">
+                    <svg class="w-4 h-4 text-purple-600 opacity-30 transition-opacity" id="icon-thread" viewBox="0 0 24 24" fill="currentColor">
                         <circle cx="12" cy="12" r="9"/>
                     </svg>
-                    <span class="text-[9px] font-bold text-slate-600">Hilo Imán</span>
+                    <span class="text-[8px] font-bold text-slate-600 scale-90">Imán</span>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- INTERACTION PROMPT -->
-    <div id="interact-prompt" class="hidden absolute bottom-36 left-1/2 -translate-x-1/2 poke-panel px-4 py-2 text-xs md:text-sm font-bold text-slate-800 pointer-events-none z-10 animate-bounce">
-        ¡Presiona <span class="bg-emerald-600 text-white px-2 py-0.5 rounded font-pixel text-[10px] mx-1">E</span> para hablar con el Maestro Wilder Parra!
+    <div id="interact-prompt" class="hidden absolute bottom-28 sm:bottom-32 left-1/2 -translate-x-1/2 poke-panel px-3 py-1.5 text-[11px] sm:text-xs font-bold text-slate-800 pointer-events-none z-10 animate-bounce">
+        ¡Presiona <span class="bg-emerald-600 text-white px-1.5 py-0.5 rounded font-pixel text-[9px] mx-1">E</span> o HABLAR!
     </div>
 
     <!-- POKÉMON STYLE DIALOGUE BOX (WILDER PARRA) -->
-    <div id="dialogue-box" class="hidden absolute bottom-5 left-1/2 -translate-x-1/2 w-[94%] max-w-2xl poke-panel p-4 md:p-5 z-20">
-        <div class="flex items-start gap-4">
+    <div id="dialogue-box" class="hidden absolute bottom-2.5 sm:bottom-4 left-1/2 -translate-x-1/2 w-[96%] max-w-xl poke-panel p-3 sm:p-4 z-20">
+        <div class="flex items-start gap-3">
             <!-- Wilder Parra Chibi Portrait -->
-            <div class="w-16 h-16 rounded-xl bg-emerald-100 border-2 border-slate-800 flex items-center justify-center shrink-0 shadow-inner relative overflow-hidden">
-                <svg class="w-14 h-14" viewBox="0 0 64 64">
+            <div class="w-14 h-14 rounded-xl bg-emerald-100 border-2 border-slate-800 flex items-center justify-center shrink-0 shadow-inner relative overflow-hidden">
+                <svg class="w-12 h-12" viewBox="0 0 64 64">
                     <circle cx="32" cy="32" r="30" fill="#a7f3d0"/>
-                    <!-- Hair -->
                     <path d="M16 26 C16 12, 48 12, 48 26 Z" fill="#334155"/>
-                    <!-- Head -->
                     <circle cx="32" cy="30" r="13" fill="#fde68a"/>
-                    <!-- Jeweler Glasses / Loupe -->
                     <circle cx="27" cy="29" r="4" fill="#ffffff" stroke="#1e293b" stroke-width="2"/>
                     <circle cx="38" cy="29" r="5" fill="#38bdf8" stroke="#fbbf24" stroke-width="2.5"/>
                     <line x1="31" y1="29" x2="33" y2="29" stroke="#1e293b" stroke-width="2"/>
-                    <!-- Smile -->
                     <path d="M28 36 Q32 40 36 36" fill="none" stroke="#1e293b" stroke-width="2" stroke-linecap="round"/>
-                    <!-- Apron & Shirt -->
                     <path d="M16 58 C18 44, 46 44, 48 58 Z" fill="#059669" stroke="#1e293b" stroke-width="2"/>
                 </svg>
             </div>
             <div class="flex-1">
-                <div class="flex items-center justify-between mb-1">
-                    <h4 class="font-bold text-base text-emerald-800 flex items-center gap-2">
+                <div class="flex items-center justify-between mb-0.5">
+                    <h4 class="font-bold text-xs sm:text-sm text-emerald-800 flex items-center gap-1.5">
                         WILDER PARRA
-                        <span class="text-[10px] bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full font-semibold border border-amber-400">Maestro Joyero Wepora</span>
+                        <span class="text-[8px] bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded-full font-semibold border border-amber-400">Maestro Joyero</span>
                     </h4>
                 </div>
-                <p id="dialogue-text" class="text-xs md:text-sm text-slate-800 font-medium leading-relaxed min-h-[3.2rem]"></p>
-                <div class="flex justify-end items-center gap-3 mt-2">
-                    <button id="dialogue-action-btn" class="emerald-btn px-4 py-1.5 rounded-lg text-xs font-bold text-white flex items-center gap-1">
-                        <span>Continuar (E)</span> <span>▼</span>
+                <p id="dialogue-text" class="text-[11px] sm:text-xs text-slate-800 font-medium leading-relaxed min-h-[2.6rem]"></p>
+                <div class="flex justify-end items-center gap-2 mt-1">
+                    <button id="dialogue-action-btn" class="emerald-btn px-3 py-1 rounded-lg text-[10px] font-bold text-white flex items-center gap-1">
+                        <span>Continuar</span> <span>▼</span>
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- TOUCH CONTROLS FOR MOBILE -->
-    <div id="touch-controls" class="absolute bottom-4 left-0 w-full px-5 justify-between items-end pointer-events-none z-10">
-        <div class="grid grid-cols-3 gap-1.5 w-36 h-36 pointer-events-auto opacity-90">
+    <!-- TOUCH CONTROLS FOR MOBILE (OPTIMIZED MARGINS & SIZES) -->
+    <div id="touch-controls" class="absolute bottom-2 left-0 w-full px-3 sm:px-6 justify-between items-end pointer-events-none z-10">
+        <!-- D-Pad -->
+        <div class="grid grid-cols-3 gap-1 w-28 h-28 sm:w-32 sm:h-32 pointer-events-auto opacity-95">
             <div></div>
-            <button data-dir="up" class="touch-dir poke-panel flex items-center justify-center font-bold text-slate-800 active:bg-emerald-300">▲</button>
+            <button data-dir="up" class="touch-dir poke-panel flex items-center justify-center font-bold text-slate-800 active:bg-emerald-300 text-xs">▲</button>
             <div></div>
-            <button data-dir="left" class="touch-dir poke-panel flex items-center justify-center font-bold text-slate-800 active:bg-emerald-300">◀</button>
-            <div class="poke-panel flex items-center justify-center text-[9px] font-bold text-emerald-700">MOV</div>
-            <button data-dir="right" class="touch-dir poke-panel flex items-center justify-center font-bold text-slate-800 active:bg-emerald-300">▶</button>
+            <button data-dir="left" class="touch-dir poke-panel flex items-center justify-center font-bold text-slate-800 active:bg-emerald-300 text-xs">◀</button>
+            <div class="poke-panel flex items-center justify-center text-[7px] font-bold text-emerald-700">MOV</div>
+            <button data-dir="right" class="touch-dir poke-panel flex items-center justify-center font-bold text-slate-800 active:bg-emerald-300 text-xs">▶</button>
             <div></div>
-            <button data-dir="down" class="touch-dir poke-panel flex items-center justify-center font-bold text-slate-800 active:bg-emerald-300">▼</button>
+            <button data-dir="down" class="touch-dir poke-panel flex items-center justify-center font-bold text-slate-800 active:bg-emerald-300 text-xs">▼</button>
             <div></div>
         </div>
-        <div class="flex gap-2.5 pointer-events-auto opacity-95">
-            <button id="touch-interact" class="w-14 h-14 rounded-full poke-panel border-amber-500 text-amber-700 font-bold text-[10px] flex items-center justify-center active:scale-95">HABLAR</button>
-            <button id="touch-dash" class="w-14 h-14 rounded-full poke-panel border-sky-500 text-sky-700 font-bold text-[10px] flex items-center justify-center active:scale-95">RÁPIDO</button>
-            <button id="touch-attack" class="w-16 h-16 rounded-full emerald-btn text-white font-bold text-xs flex items-center justify-center active:scale-95">HOJA GEMA</button>
+        <!-- Action Buttons -->
+        <div class="flex gap-2 pointer-events-auto opacity-95 items-end pb-1">
+            <button id="touch-interact" class="w-12 h-12 sm:w-13 sm:h-13 rounded-full poke-panel border-amber-500 text-amber-800 font-bold text-[9px] flex items-center justify-center active:scale-95 shadow">HABLAR</button>
+            <button id="touch-dash" class="w-12 h-12 sm:w-13 sm:h-13 rounded-full poke-panel border-sky-500 text-sky-800 font-bold text-[9px] flex items-center justify-center active:scale-95 shadow">DASH</button>
+            <button id="touch-attack" class="w-14 h-14 sm:w-16 sm:h-16 rounded-full emerald-btn text-white font-bold text-[10px] sm:text-xs flex items-center justify-center active:scale-95 shadow text-center leading-tight">HOJA GEMA</button>
         </div>
     </div>
 
-    <!-- START SCREEN OVERLAY -->
-    <div id="start-screen" class="absolute inset-0 z-30 flex items-center justify-center p-4 bg-emerald-950/80 backdrop-blur-md">
-        <div class="poke-dark-panel max-w-xl w-full p-6 md:p-8 text-center relative overflow-hidden">
-            <div class="w-20 h-20 mx-auto mb-3 rounded-2xl bg-emerald-900/90 border-2 border-emerald-400 flex items-center justify-center emerald-glow-anim">
-                <svg class="w-12 h-12 text-emerald-400" viewBox="0 0 24 24" fill="currentColor">
+    <!-- START SCREEN OVERLAY (CLEAN HOME WITHOUT GITHUB MODAL CLUTTER) -->
+    <div id="start-screen" class="absolute inset-0 z-30 flex items-center justify-center p-3 sm:p-4 bg-emerald-950/85 backdrop-blur-md overflow-y-auto">
+        <div class="poke-dark-panel max-w-md w-full p-5 sm:p-6 text-center relative my-auto">
+            <div class="w-16 h-16 mx-auto mb-2.5 rounded-2xl bg-emerald-900/90 border-2 border-emerald-400 flex items-center justify-center emerald-glow-anim">
+                <svg class="w-10 h-10 text-emerald-400" viewBox="0 0 24 24" fill="currentColor">
                     <polygon points="12 2 19 7 19 17 12 22 5 17 5 7 12 2" fill-opacity="0.3" stroke="currentColor" stroke-width="1.5"/>
                     <polygon points="12 5 16 8 16 16 12 19 8 16 8 8 12 5"/>
                 </svg>
             </div>
 
-            <span class="font-pixel text-[10px] uppercase tracking-widest text-amber-400">Edición Naturaleza & Guardianes 2D</span>
-            <h1 class="font-cinzel text-2xl md:text-4xl font-extrabold text-white mt-2 mb-2 tracking-wide">
+            <span class="font-pixel text-[9px] uppercase tracking-widest text-amber-400">Edición Naturaleza & Guardianes 2D</span>
+            <h1 class="font-cinzel text-xl sm:text-2xl font-extrabold text-white mt-1.5 mb-2 tracking-wide">
                 WEPORA: <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-amber-300">EL LEGADO DE LA ESMERALDA</span>
             </h1>
-            <p class="text-xs md:text-sm text-slate-200 leading-relaxed mb-5">
-                Explora los bosques y rutas naturales de Muzo al estilo <strong>Pokémon</strong>. Derrota a los <strong>3 Guardianes Elementales</strong> para conseguir los materiales de la Pulsera Wepora y llévalos al claro central con el Maestro Joyero <strong>Wilder Parra</strong>.
+            <p class="text-[11px] sm:text-xs text-slate-200 leading-relaxed mb-4">
+                Explora los bosques de Muzo estilo <strong>Pokémon</strong>. Derrota a los <strong>3 Guardianes Elementales</strong>, consigue los materiales de la pulsera y llévalos al maestro joyero <strong>Wilder Parra</strong>.
             </p>
 
             <!-- Pokémon Boss Cards Preview -->
-            <div class="grid grid-cols-3 gap-2.5 mb-5 text-left">
-                <div class="bg-emerald-950/90 p-2.5 rounded-xl border-2 border-emerald-500/60">
-                    <div class="text-[10px] font-pixel text-emerald-300">NORTE • Nv.70</div>
-                    <div class="text-xs font-bold text-white mt-0.5">Esmeraldón</div>
-                    <div class="text-[10px] text-emerald-200/80 mt-0.5">Entrega: <strong>Esmeralda Muzo</strong></div>
+            <div class="grid grid-cols-3 gap-2 mb-4 text-left text-[10px]">
+                <div class="bg-emerald-950/90 p-2 rounded-lg border border-emerald-500/60">
+                    <div class="font-pixel text-emerald-300 text-[8px]">NORTE</div>
+                    <div class="font-bold text-white mt-0.5">Esmeraldón</div>
                 </div>
-                <div class="bg-slate-900/90 p-2.5 rounded-xl border-2 border-slate-400/60">
-                    <div class="text-[10px] font-pixel text-slate-300">OESTE • Nv.70</div>
-                    <div class="text-xs font-bold text-white mt-0.5">Argentagron</div>
-                    <div class="text-[10px] text-slate-300/80 mt-0.5">Entrega: <strong>Plata</strong></div>
+                <div class="bg-slate-900/90 p-2 rounded-lg border border-slate-400/60">
+                    <div class="font-pixel text-slate-300 text-[8px]">OESTE</div>
+                    <div class="font-bold text-white mt-0.5">Argentagron</div>
                 </div>
-                <div class="bg-purple-950/90 p-2.5 rounded-xl border-2 border-purple-400/60">
-                    <div class="text-[10px] font-pixel text-purple-300">ESTE • Nv.70</div>
-                    <div class="text-xs font-bold text-white mt-0.5">Magnecuarzo</div>
-                    <div class="text-[10px] text-purple-200/80 mt-0.5">Entrega: <strong>Hilo e Imán</strong></div>
+                <div class="bg-purple-950/90 p-2 rounded-lg border border-purple-400/60">
+                    <div class="font-pixel text-purple-300 text-[8px]">ESTE</div>
+                    <div class="font-bold text-white mt-0.5">Magnecuarzo</div>
                 </div>
             </div>
 
-            <div class="bg-slate-900/90 rounded-xl p-2.5 mb-5 border border-slate-700 text-xs text-slate-200 flex flex-wrap justify-center gap-4">
-                <span><strong class="text-emerald-400">WASD / Flechas:</strong> Caminar</span>
-                <span><strong class="text-emerald-400">Click / Espacio:</strong> Hoja Esmeralda</span>
-                <span><strong class="text-emerald-400">Shift:</strong> Ataque Rápido</span>
-                <span><strong class="text-emerald-400">E:</strong> Hablar con Wilder Parra</span>
-            </div>
-
-            <div class="flex flex-col sm:flex-row gap-3 justify-center">
-                <button id="start-btn" class="emerald-btn px-7 py-3.5 rounded-xl font-pixel text-xs text-white tracking-wider">
-                    ¡INICIAR AVENTURA!
-                </button>
-                <button id="github-modal-btn" class="px-4 py-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border-2 border-slate-500 text-xs font-bold transition">
-                    ¿Cómo subir a GitHub?
-                </button>
-            </div>
+            <button id="start-btn" class="emerald-btn w-full py-3 rounded-xl font-pixel text-xs text-white tracking-wider">
+                ¡INICIAR AVENTURA!
+            </button>
         </div>
     </div>
 
     <!-- VICTORY MODAL (CRAFTED BRACELET) -->
     <div id="victory-screen" class="hidden absolute inset-0 z-30 flex items-center justify-center p-4 bg-emerald-950/85 backdrop-blur-md">
-        <div class="poke-dark-panel max-w-lg w-full p-6 md:p-8 text-center border-4 border-amber-400 relative">
-            <span class="px-3 py-1 rounded-full bg-amber-400/20 border border-amber-300 text-amber-300 font-pixel text-[10px] uppercase">¡Joya Legendaria Forjada!</span>
-            <h2 class="font-cinzel text-2xl md:text-3xl font-extrabold text-white mt-3">Pulsera Wepora de Esmeralda</h2>
-            <p class="text-xs text-emerald-300 mt-1">Forjada en el Claro del Bosque por <strong>Wilder Parra</strong></p>
+        <div class="poke-dark-panel max-w-md w-full p-5 sm:p-6 text-center border-4 border-amber-400 relative">
+            <span class="px-3 py-1 rounded-full bg-amber-400/20 border border-amber-300 text-amber-300 font-pixel text-[9px] uppercase">¡Joya Legendaria Forjada!</span>
+            <h2 class="font-cinzel text-xl sm:text-2xl font-extrabold text-white mt-2">Pulsera Wepora de Esmeralda</h2>
+            <p class="text-[11px] text-emerald-300 mt-0.5">Forjada por <strong>Wilder Parra</strong></p>
 
-            <!-- SVG Bracelet Illustration -->
-            <div class="my-5 flex justify-center">
-                <div class="w-44 h-44 rounded-full bg-gradient-to-b from-emerald-900 to-slate-900 border-4 border-emerald-400 flex items-center justify-center relative emerald-glow-anim">
-                    <svg class="w-36 h-36" viewBox="0 0 120 120">
+            <div class="my-4 flex justify-center">
+                <div class="w-32 h-32 rounded-full bg-gradient-to-b from-emerald-900 to-slate-900 border-4 border-emerald-400 flex items-center justify-center relative emerald-glow-anim">
+                    <svg class="w-28 h-28" viewBox="0 0 120 120">
                         <circle cx="60" cy="60" r="40" fill="none" stroke="#1e293b" stroke-width="7" stroke-dasharray="8 4"/>
                         <circle cx="60" cy="60" r="40" fill="none" stroke="#cbd5e1" stroke-width="2.5"/>
-                        <circle cx="60" cy="20" r="5" fill="#f8fafc" stroke="#475569" stroke-width="1.5"/>
-                        <circle cx="32" cy="32" r="5" fill="#f8fafc" stroke="#475569" stroke-width="1.5"/>
-                        <circle cx="88" cy="32" r="5" fill="#f8fafc" stroke="#475569" stroke-width="1.5"/>
-                        <circle cx="20" cy="60" r="4.5" fill="#e2e8f0"/>
-                        <circle cx="100" cy="60" r="4.5" fill="#e2e8f0"/>
-                        <circle cx="60" cy="100" r="6" fill="#c084fc" stroke="#f8fafc" stroke-width="1.5"/>
                         <polygon points="60,6 72,16 68,30 52,30 48,16" fill="#10b981" stroke="#a7f3d0" stroke-width="2"/>
                         <polygon points="60,10 67,17 64,26 56,26 53,17" fill="#34d399"/>
                     </svg>
                 </div>
             </div>
 
-            <p class="text-xs md:text-sm text-slate-200 leading-relaxed mb-5">
-                "¡Lo lograste! Con la <strong>Esmeralda Muzo Pura</strong> de Esmeraldón, la <strong>Plata</strong> de Argentagron y el <strong>Hilo Magnético</strong> de Magnecuarzo, hemos creado una pieza única llena de energía natural." <br><span class="text-amber-300 font-bold">— Maestro Wilder Parra</span>
+            <p class="text-[11px] sm:text-xs text-slate-200 leading-relaxed mb-4">
+                "¡Lo lograste! Con la <strong>Esmeralda Muzo</strong>, la <strong>Plata Ley 925</strong> y el <strong>Hilo Imán</strong>, creamos una pieza única." <br><span class="text-amber-300 font-bold">— Maestro Wilder Parra</span>
             </p>
 
-            <div id="victory-stats" class="bg-slate-900 rounded-xl p-3 mb-5 border border-slate-700 text-xs text-slate-200 flex justify-around">
-                <div>Tiempo Total: <strong id="stat-time" class="text-emerald-400 font-pixel">00:00</strong></div>
-                <div>Guardianes: <strong class="text-amber-400 font-pixel">3 / 3</strong></div>
+            <div id="victory-stats" class="bg-slate-900 rounded-xl p-2.5 mb-4 border border-slate-700 text-xs text-slate-200 flex justify-around">
+                <div>Tiempo: <strong id="stat-time" class="text-emerald-400 font-pixel text-xs">00:00</strong></div>
+                <div>Guardianes: <strong class="text-amber-400 font-pixel text-xs">3 / 3</strong></div>
             </div>
 
-            <button id="replay-btn" class="emerald-btn w-full py-3.5 rounded-xl font-pixel text-xs text-white tracking-wider">
+            <button id="replay-btn" class="emerald-btn w-full py-3 rounded-xl font-pixel text-xs text-white tracking-wider">
                 JUGAR DE NUEVO
             </button>
-        </div>
-    </div>
-
-    <!-- GITHUB INSTRUCTIONS MODAL -->
-    <div id="github-modal" class="hidden absolute inset-0 z-40 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-        <div class="poke-panel max-w-lg w-full p-6 text-left">
-            <div class="flex justify-between items-center mb-3 border-b border-slate-300 pb-2">
-                <h3 class="font-bold text-base text-emerald-800">Cómo publicar en GitHub Pages</h3>
-                <button id="close-github-btn" class="text-slate-500 hover:text-slate-900 text-xl font-bold">&times;</button>
-            </div>
-            <ol class="text-xs md:text-sm text-slate-700 space-y-2.5 list-decimal list-inside leading-relaxed">
-                <li>Guarda este archivo con el nombre <code class="bg-slate-200 px-1.5 py-0.5 rounded font-bold text-emerald-800">index.html</code>.</li>
-                <li>Crea un repositorio público en tu cuenta de <strong>GitHub</strong> (ej. <code class="bg-slate-200 px-1.5 py-0.5 rounded font-bold text-emerald-800">wepora-pokemon-game</code>).</li>
-                <li>Sube el archivo <code class="bg-slate-200 px-1.5 py-0.5 rounded font-bold text-emerald-800">index.html</code> y confirma con <em>Commit changes</em>.</li>
-                <li>Ve a <strong>Settings &rarr; Pages</strong> en tu repositorio.</li>
-                <li>En <em>Branch</em> elige <strong>main</strong> y presiona <strong>Save</strong>. ¡En un minuto tendrás tu link web jugable!</li>
-            </ol>
-            <div class="mt-5 text-right">
-                <button id="close-github-btn-2" class="emerald-btn px-5 py-2 rounded-lg text-xs font-bold text-white">¡Entendido!</button>
-            </div>
         </div>
     </div>
 </div>
@@ -349,10 +335,9 @@
 <script>
 /**
  * WEPORA: EL LEGADO DE LA ESMERALDA (Edición Pokémon Nature 2D)
- * Sprites 2D Chibi/Pokémon, Ataques Elementales y Naturaleza Viva en un solo archivo.
+ * Optimizado para responsividad móvil, rotación y controles táctiles.
  */
 
-// --- RETRO POKÉMON 8-BIT AUDIO SYNTHESIZER ---
 class SoundFX {
     constructor() { this.ctx = null; }
     init() {
@@ -380,7 +365,6 @@ class SoundFX {
         const gain = this.ctx.createGain();
         osc.type = 'sawtooth';
         osc.frequency.setValueAtTime(220, this.ctx.currentTime);
-        osc.frequency.setValueAtTime(120, this.ctx.currentTime + 0.05);
         osc.frequency.exponentialRampToValueAtTime(60, this.ctx.currentTime + 0.14);
         gain.gain.setValueAtTime(0.18, this.ctx.currentTime);
         gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.14);
@@ -389,7 +373,6 @@ class SoundFX {
     }
     playPickup() {
         if (!this.ctx) return;
-        // Classic Pokémon item fanfare notes
         const notes = [587.33, 587.33, 587.33, 783.99, 987.77];
         const times = [0, 0.09, 0.18, 0.27, 0.42];
         notes.forEach((freq, i) => {
@@ -435,12 +418,11 @@ class SoundFX {
 
 const sfx = new SoundFX();
 
-// --- GAME WORLD & NATURE ZONES ---
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
 const WORLD_SIZE = 3200;
-const CENTER = WORLD_SIZE / 2; // 1600
+const CENTER = WORLD_SIZE / 2;
 
 const ZONES = {
     hub: { x: CENTER, y: CENTER, r: 390, name: "Claro de Wilder Parra" },
@@ -457,7 +439,6 @@ let globalTick = 0;
 const keys = {};
 const mouse = { x: 0, y: 0, worldX: 0, worldY: 0 };
 
-// Trainer Player Object
 const player = {
     x: CENTER,
     y: CENTER + 105,
@@ -466,7 +447,7 @@ const player = {
     hp: 100,
     maxHp: 100,
     angle: -Math.PI / 2,
-    facing: 'up', // 'up', 'down', 'left', 'right'
+    facing: 'up',
     walkFrame: 0,
     isMoving: false,
     dashCooldown: 0,
@@ -478,7 +459,6 @@ const player = {
     materials: { emerald: false, silver: false, thread: false }
 };
 
-// NPC Master Jeweler Wilder Parra
 const wilder = {
     x: CENTER,
     y: CENTER - 45,
@@ -486,7 +466,6 @@ const wilder = {
     name: "Wilder Parra"
 };
 
-// World Arrays
 let bosses = [];
 let projectiles = [];
 let playerBolts = [];
@@ -517,7 +496,6 @@ function initWorld() {
     tallGrassPatches = [];
     flowers = [];
 
-    // Generate Nature Wildflowers & Tall Grass Patches
     for (let i = 0; i < 420; i++) {
         const fx = 100 + Math.random() * (WORLD_SIZE - 200);
         const fy = 100 + Math.random() * (WORLD_SIZE - 200);
@@ -532,7 +510,6 @@ function initWorld() {
     for (let i = 0; i < 240; i++) {
         const gx = 120 + Math.random() * (WORLD_SIZE - 240);
         const gy = 120 + Math.random() * (WORLD_SIZE - 240);
-        // Keep cobblestone paths clean
         const onVertPath = Math.abs(gx - CENTER) < 70 && gy > ZONES.north.y && gy < CENTER + 180;
         const onHorizPath = Math.abs(gy - CENTER) < 70 && gx > ZONES.west.x && gx < ZONES.east.x;
         if (!onVertPath && !onHorizPath) {
@@ -540,7 +517,6 @@ function initWorld() {
         }
     }
 
-    // Generate Pokémon-style Lush Trees & Biome Rocks
     for (let i = 0; i < 190; i++) {
         const tx = 90 + Math.random() * (WORLD_SIZE - 180);
         const ty = 90 + Math.random() * (WORLD_SIZE - 180);
@@ -559,16 +535,10 @@ function initWorld() {
             else if (tx > 2150 && Math.random() < 0.45) type = 'quartz_cluster';
             else if (tx < 1150) type = 'pine_tree';
 
-            trees.push({
-                x: tx,
-                y: ty,
-                r: 22 + Math.random() * 12,
-                type: type
-            });
+            trees.push({ x: tx, y: ty, r: 22 + Math.random() * 12, type: type });
         }
     }
 
-    // Border forest ring around world edges
     for (let a = 0; a < WORLD_SIZE; a += 65) {
         trees.push({ x: a, y: 40, r: 30, type: 'oak_tree' });
         trees.push({ x: a, y: WORLD_SIZE - 40, r: 30, type: 'oak_tree' });
@@ -576,7 +546,6 @@ function initWorld() {
         trees.push({ x: WORLD_SIZE - 40, y: a, r: 30, type: 'oak_tree' });
     }
 
-    // Create the 3 Pokémon-Style Bosses
     bosses = [
         {
             id: 'emerald',
@@ -584,39 +553,23 @@ function initWorld() {
             typeLabel: 'ROCA / PLANTA',
             badgeColor: '#059669',
             zone: ZONES.north,
-            x: ZONES.north.x,
-            y: ZONES.north.y,
-            r: 42,
-            hp: 280,
-            maxHp: 280,
-            color: '#10b981',
-            accent: '#a7f3d0',
-            speed: 1.85,
-            timer: 0,
-            hitFlash: 0,
-            dropName: 'Esmeralda Muzo Pura',
-            alive: true
+            x: ZONES.north.x, y: ZONES.north.y,
+            r: 42, hp: 280, maxHp: 280,
+            color: '#10b981', accent: '#a7f3d0',
+            speed: 1.85, timer: 0, hitFlash: 0,
+            dropName: 'Esmeralda Muzo Pura', alive: true
         },
         {
             id: 'silver',
-            name: 'ARGENTAGRON (Coloso Plata)',
+            name: 'ARGENTAGRON (Coloso Plata 925)',
             typeLabel: 'ACERO / ROCA',
             badgeColor: '#475569',
             zone: ZONES.west,
-            x: ZONES.west.x,
-            y: ZONES.west.y,
-            r: 44,
-            hp: 320,
-            maxHp: 320,
-            color: '#94a3b8',
-            accent: '#38bdf8',
-            speed: 2.2,
-            timer: 0,
-            dashVx: 0,
-            dashVy: 0,
-            hitFlash: 0,
-            dropName: 'Plata',
-            alive: true
+            x: ZONES.west.x, y: ZONES.west.y,
+            r: 44, hp: 320, maxHp: 320,
+            color: '#94a3b8', accent: '#38bdf8',
+            speed: 2.2, timer: 0, dashVx: 0, dashVy: 0, hitFlash: 0,
+            dropName: 'Plata Ley 925', alive: true
         },
         {
             id: 'thread',
@@ -624,18 +577,11 @@ function initWorld() {
             typeLabel: 'ELÉCTRICO / PSÍQUICO',
             badgeColor: '#7e22ce',
             zone: ZONES.east,
-            x: ZONES.east.x,
-            y: ZONES.east.y,
-            r: 38,
-            hp: 260,
-            maxHp: 260,
-            color: '#c084fc',
-            accent: '#f43f5e',
-            speed: 2.4,
-            timer: 0,
-            hitFlash: 0,
-            dropName: 'Hilo e Imán Ancestral',
-            alive: true
+            x: ZONES.east.x, y: ZONES.east.y,
+            r: 38, hp: 260, maxHp: 260,
+            color: '#c084fc', accent: '#f43f5e',
+            speed: 2.4, timer: 0, hitFlash: 0,
+            dropName: 'Hilo e Imán Ancestral', alive: true
         }
     ];
 }
@@ -647,7 +593,6 @@ function resizeCanvas() {
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
-// --- INPUT LISTENERS ---
 window.addEventListener('keydown', (e) => {
     const k = e.key.toLowerCase();
     keys[k] = true;
@@ -675,7 +620,6 @@ canvas.addEventListener('mousedown', (e) => {
     if (gameState === 'PLAYING' && e.button === 0) triggerAttack();
 });
 
-// Touch Controls
 document.querySelectorAll('.touch-dir').forEach(btn => {
     const dir = btn.getAttribute('data-dir');
     const map = { up: 'w', down: 's', left: 'a', right: 'd' };
@@ -696,16 +640,10 @@ document.getElementById('touch-interact').addEventListener('touchstart', (e) => 
     else if (gameState === 'DIALOGUE') closeOrAdvanceDialogue();
 });
 
-// --- FLOATING BATTLE TEXT (Pokémon Style) ---
 function addFloatingText(x, y, text, color = '#ffffff', size = 13) {
-    floatingTexts.push({
-        x, y: y - 20,
-        text, color, size,
-        life: 45, maxLife: 45
-    });
+    floatingTexts.push({ x, y: y - 20, text, color, size, life: 45, maxLife: 45 });
 }
 
-// --- PLAYER POKÉMON MOVES ---
 function triggerDash() {
     if (player.dashCooldown <= 0) {
         player.dashTime = 11;
@@ -723,7 +661,6 @@ function triggerAttack() {
     player.attackAnim = 12;
     sfx.playSwing();
 
-    // Shoot "Hoja / Pulso Esmeralda" (Leaf Blade + Gem Pulse projectile)
     const boltSpeed = 10;
     playerBolts.push({
         x: player.x + Math.cos(player.angle) * 24,
@@ -731,12 +668,9 @@ function triggerAttack() {
         vx: Math.cos(player.angle) * boltSpeed,
         vy: Math.sin(player.angle) * boltSpeed,
         angle: player.angle,
-        r: 11,
-        life: 34,
-        dmg: 25
+        r: 11, life: 34, dmg: 25
     });
 
-    // Close-range Leaf Blade slash hit check
     bosses.forEach(b => {
         if (!b.alive) return;
         const dist = Math.hypot(b.x - player.x, b.y - player.y);
@@ -744,9 +678,7 @@ function triggerAttack() {
             const angleToBoss = Math.atan2(b.y - player.y, b.x - player.x);
             let diff = Math.abs(angleToBoss - player.angle);
             if (diff > Math.PI) diff = 2 * Math.PI - diff;
-            if (diff < 1.35) {
-                damageBoss(b, 22, true);
-            }
+            if (diff < 1.35) damageBoss(b, 22, true);
         }
     });
 }
@@ -770,18 +702,12 @@ function damageBoss(b, amount, isCrit = false) {
         spawnParticles(b.x, b.y, b.color, 45, 7);
 
         droppedItems.push({
-            id: b.id,
-            name: b.dropName,
-            x: b.x,
-            y: b.y,
-            r: 20,
-            color: b.color,
-            pulse: 0
+            id: b.id, name: b.dropName,
+            x: b.x, y: b.y, r: 20, color: b.color, pulse: 0
         });
     }
 }
 
-// --- WILDER PARRA INTERACTION ---
 let pendingVictoryAfterDialogue = false;
 
 function tryInteractWithWilder() {
@@ -804,20 +730,20 @@ function openWilderDialogue() {
     const count = (m.emerald ? 1 : 0) + (m.silver ? 1 : 0) + (m.thread ? 1 : 0);
 
     if (count === 0) {
-        textEl.innerHTML = `¡Hola, joven entrenador y artesano! Soy <strong>Wilder Parra</strong>. Para forjar la legendaria <em>Pulsera Wepora de Esmeralda</em>, explora las 3 rutas naturales y derrota a los Pokémon Guardianes: <strong>Esmeraldón</strong> al Norte, <strong>Argentagron</strong> al Oeste y <strong>Magnecuarzo</strong> al Este. ¡He curado tus PS al 100%!`;
-        btnEl.innerHTML = `<span>¡En marcha! (E)</span> <span>▼</span>`;
+        textEl.innerHTML = `¡Hola, explorador! Soy <strong>Wilder Parra</strong>. Derrota a los 3 Pokémon Guardianes: <strong>Esmeraldón</strong> (Norte), <strong>Argentagron</strong> (Oeste) y <strong>Magnecuarzo</strong> (Este). ¡He curado tus PS!`;
+        btnEl.innerHTML = `<span>¡En marcha!</span> <span>▼</span>`;
         pendingVictoryAfterDialogue = false;
     } else if (count < 3) {
         const missing = [];
-        if (!m.emerald) missing.push("Esmeralda Muzo (Norte)");
-        if (!m.silver) missing.push("Plata(Oeste)");
-        if (!m.thread) missing.push("Hilo e Imán (Este)");
-        textEl.innerHTML = `¡Gran trabajo! Ya tienes <strong>${count} de 3</strong> materiales en mi mesa de orfebrería. Aún falta conseguir: <span class="text-emerald-700 font-bold">${missing.join(', ')}</span>. ¡Tus PS han sido restaurados!`;
-        btnEl.innerHTML = `<span>Continuar aventura (E)</span> <span>▼</span>`;
+        if (!m.emerald) missing.push("Esmeralda Muzo");
+        if (!m.silver) missing.push("Plata 925");
+        if (!m.thread) missing.push("Hilo Imán");
+        textEl.innerHTML = `¡Bien! Tienes <strong>${count} de 3</strong> materiales. Falta conseguir: <span class="text-emerald-700 font-bold">${missing.join(', ')}</span>. ¡PS restaurados!`;
+        btnEl.innerHTML = `<span>Continuar</span> <span>▼</span>`;
         pendingVictoryAfterDialogue = false;
     } else {
-        textEl.innerHTML = `¡Asombroso! Has reunido la <strong>Esmeralda Muzo Pura</strong>, la <strong>Plata</strong> y el <strong>Hilo e Imán Ancestral</strong>. Observa cómo engasto la piedra natural en plata... ¡La Pulsera Wepora está terminada!`;
-        btnEl.innerHTML = `<span>¡Forjar Pulsera Wepora! (E)</span> <span>★</span>`;
+        textEl.innerHTML = `¡Asombroso! Tienes la <strong>Esmeralda</strong>, la <strong>Plata</strong> y el <strong>Hilo Imán</strong>. Observa cómo engasto la joya... ¡La Pulsera Wepora está terminada!`;
+        btnEl.innerHTML = `<span>¡Forjar Pulsera!</span> <span>★</span>`;
         pendingVictoryAfterDialogue = true;
     }
 }
@@ -844,12 +770,10 @@ function triggerVictory() {
     document.getElementById('victory-screen').classList.remove('hidden');
 }
 
-// --- HUD HELPERS ---
 function updateHealthUI() {
     const pct = Math.max(0, (player.hp / player.maxHp) * 100);
     const bar = document.getElementById('hp-bar');
     bar.style.width = `${pct}%`;
-    // Pokémon HP color change (Green -> Yellow -> Red)
     if (pct > 50) bar.className = "bg-emerald-500 h-full rounded-full transition-all duration-200";
     else if (pct > 22) bar.className = "bg-amber-400 h-full rounded-full transition-all duration-200";
     else bar.className = "bg-red-500 h-full rounded-full transition-all duration-200";
@@ -887,19 +811,15 @@ function spawnParticles(x, y, color, count = 10, maxSpeed = 4) {
             vx: Math.cos(ang) * spd,
             vy: Math.sin(ang) * spd,
             r: 2.5 + Math.random() * 3.5,
-            color,
-            alpha: 1,
-            decay: 0.022 + Math.random() * 0.025
+            color, alpha: 1, decay: 0.022 + Math.random() * 0.025
         });
     }
 }
 
-// --- MAIN UPDATE LOOP ---
 function update() {
     globalTick++;
     if (gameState !== 'PLAYING') return;
 
-    // 1. Player Movement & 4-Direction Facing
     let dx = 0, dy = 0;
     if (keys['w'] || keys['arrowup']) dy -= 1;
     if (keys['s'] || keys['arrowdown']) dy += 1;
@@ -923,7 +843,6 @@ function update() {
     player.x += dx * currentSpeed;
     player.y += dy * currentSpeed;
 
-    // Quick Attack Afterimages
     if (player.dashTime > 0 && globalTick % 2 === 0) {
         player.afterimages.push({ x: player.x, y: player.y, facing: player.facing, alpha: 0.6 });
     }
@@ -932,11 +851,9 @@ function update() {
         if (player.afterimages[i].alpha <= 0) player.afterimages.splice(i, 1);
     }
 
-    // World Boundaries
     player.x = Math.max(85, Math.min(WORLD_SIZE - 85, player.x));
     player.y = Math.max(85, Math.min(WORLD_SIZE - 85, player.y));
 
-    // Tree & Rock Collisions
     trees.forEach(t => {
         const dist = Math.hypot(player.x - t.x, player.y - t.y);
         const minDist = player.r + t.r * 0.75;
@@ -947,7 +864,6 @@ function update() {
         }
     });
 
-    // Aiming Angle
     const camX = player.x - canvas.width / 2;
     const camY = player.y - canvas.height / 2;
     mouse.worldX = mouse.x + camX;
@@ -959,7 +875,6 @@ function update() {
         player.angle = Math.atan2(mouse.worldY - player.y, mouse.worldX - player.x);
     }
 
-    // Timers
     if (player.dashTime > 0) player.dashTime--;
     if (player.dashCooldown > 0) player.dashCooldown--;
     if (player.attackCooldown > 0) player.attackCooldown--;
@@ -970,7 +885,6 @@ function update() {
     const dashPct = Math.max(0, 100 - (player.dashCooldown / 50) * 100);
     document.getElementById('dash-bar').style.width = `${dashPct}%`;
 
-    // Zone Indicator & Sanctuary Healing
     let currentZoneName = "Ruta del Bosque Wepora";
     for (const key in ZONES) {
         const z = ZONES[key];
@@ -985,25 +899,17 @@ function update() {
     }
     document.getElementById('zone-indicator').textContent = currentZoneName;
 
-    // Wilder Parra Prompt
     const distWilder = Math.hypot(player.x - wilder.x, player.y - wilder.y);
     const promptEl = document.getElementById('interact-prompt');
     if (distWilder < 115) promptEl.classList.remove('hidden');
     else promptEl.classList.add('hidden');
 
-    // 2. Update Player Leaf/Gem Bolts
     for (let i = playerBolts.length - 1; i >= 0; i--) {
         const b = playerBolts[i];
         if (!b) continue;
-        b.x += b.vx;
-        b.y += b.vy;
-        b.life--;
+        b.x += b.vx; b.y += b.vy; b.life--;
         if (globalTick % 2 === 0) {
-            particles.push({
-                x: b.x, y: b.y,
-                vx: (Math.random() - 0.5) * 1.5, vy: (Math.random() - 0.5) * 1.5,
-                r: 3, color: '#6ee7b7', alpha: 0.8, decay: 0.06
-            });
+            particles.push({ x: b.x, y: b.y, vx: (Math.random() - 0.5) * 1.5, vy: (Math.random() - 0.5) * 1.5, r: 3, color: '#6ee7b7', alpha: 0.8, decay: 0.06 });
         }
 
         let hit = false;
@@ -1017,13 +923,11 @@ function update() {
         if (hit || b.life <= 0) playerBolts.splice(i, 1);
     }
 
-    // 3. Update Ground Root/Crystal Hazards
     for (let i = groundHazards.length - 1; i >= 0; i--) {
         const gh = groundHazards[i];
         if (!gh) continue;
         gh.timer++;
         if (gh.timer === 35) {
-            // Erupt crystal spikes!
             sfx.playSwing();
             spawnParticles(gh.x, gh.y, '#10b981', 12, 4);
             if (Math.hypot(player.x - gh.x, player.y - gh.y) < gh.r + player.r && player.invuln <= 0) {
@@ -1033,7 +937,6 @@ function update() {
         if (gh.timer > 55) groundHazards.splice(i, 1);
     }
 
-    // 4. Boss Pokémon AI & Elemental Moves
     let activeBoss = null;
     bosses.forEach(b => {
         if (!b.alive) return;
@@ -1046,27 +949,18 @@ function update() {
             const ang = Math.atan2(player.y - b.y, player.x - b.x);
 
             if (b.id === 'emerald') {
-                // ESMERALDÓN: "Tormenta de Hojas y Esmeraldas" + Raíces de Cristal
                 b.x += Math.cos(ang) * b.speed;
                 b.y += Math.sin(ang) * b.speed;
-
                 if (b.timer % 80 === 0) {
                     addFloatingText(b.x, b.y - 30, "¡Tormenta Esmeralda!", "#34d399", 11);
                     const count = 10;
                     for (let k = 0; k < count; k++) {
                         const a = (Math.PI * 2 / count) * k + (b.timer * 0.03);
-                        projectiles.push({
-                            x: b.x, y: b.y,
-                            vx: Math.cos(a) * 4.4, vy: Math.sin(a) * 4.4,
-                            r: 9, type: 'leaf_gem', color: '#10b981', dmg: 14, life: 115
-                        });
+                        projectiles.push({ x: b.x, y: b.y, vx: Math.cos(a) * 4.4, vy: Math.sin(a) * 4.4, r: 9, type: 'leaf_gem', color: '#10b981', dmg: 14, life: 115 });
                     }
                 }
-                if (b.timer % 110 === 50) {
-                    groundHazards.push({ x: player.x, y: player.y, r: 36, timer: 0 });
-                }
+                if (b.timer % 110 === 50) groundHazards.push({ x: player.x, y: player.y, r: 36, timer: 0 });
             } else if (b.id === 'silver') {
-                // ARGENTAGRON: "Cabeza de Hierro" (Dash) & "Cañón Flash"
                 if (b.timer % 105 < 68) {
                     b.x += Math.cos(ang) * (b.speed * 0.65);
                     b.y += Math.sin(ang) * (b.speed * 0.65);
@@ -1077,49 +971,33 @@ function update() {
                         spawnParticles(b.x, b.y, '#f8fafc', 15, 4);
                     }
                 } else {
-                    b.x += b.dashVx;
-                    b.y += b.dashVy;
+                    b.x += b.dashVx; b.y += b.dashVy;
                     if (b.timer % 8 === 0) {
-                        projectiles.push({
-                            x: b.x, y: b.y,
-                            vx: -b.dashVy * 0.48, vy: b.dashVx * 0.48,
-                            r: 8, type: 'steel_orb', color: '#cbd5e1', dmg: 15, life: 75
-                        });
+                        projectiles.push({ x: b.x, y: b.y, vx: -b.dashVy * 0.48, vy: b.dashVx * 0.48, r: 8, type: 'steel_orb', color: '#cbd5e1', dmg: 15, life: 75 });
                     }
                 }
             } else if (b.id === 'thread') {
-                // MAGNECUARZO: "Chispazo Magnético / Onda Trueno"
                 b.x += Math.cos(ang + 0.65) * b.speed;
                 b.y += Math.sin(ang + 0.65) * b.speed;
-
                 if (b.timer % 50 === 0) {
                     if (b.timer % 100 === 0) addFloatingText(b.x, b.y - 30, "¡Chispazo Magnético!", "#c084fc", 11);
                     for (let spread = -1; spread <= 1; spread++) {
                         const shotAng = ang + spread * 0.25;
-                        projectiles.push({
-                            x: b.x, y: b.y,
-                            vx: Math.cos(shotAng) * 5.6, vy: Math.sin(shotAng) * 5.6,
-                            r: 9, type: 'electric_orb', color: '#c084fc', dmg: 13, life: 100
-                        });
+                        projectiles.push({ x: b.x, y: b.y, vx: Math.cos(shotAng) * 5.6, vy: Math.sin(shotAng) * 5.6, r: 9, type: 'electric_orb', color: '#c084fc', dmg: 13, life: 100 });
                     }
                 }
             }
 
-            // Keep boss inside its nature sanctuary
             const distFromZone = Math.hypot(b.x - b.zone.x, b.y - b.zone.y);
             if (distFromZone > b.zone.r - 35) {
                 const backAng = Math.atan2(b.zone.y - b.y, b.zone.x - b.x);
-                b.x += Math.cos(backAng) * 4;
-                b.y += Math.sin(backAng) * 4;
+                b.x += Math.cos(backAng) * 4; b.y += Math.sin(backAng) * 4;
             }
 
-            if (distToPlayer < b.r + player.r && player.invuln <= 0) {
-                damagePlayer(15);
-            }
+            if (distToPlayer < b.r + player.r && player.invuln <= 0) damagePlayer(15);
         }
     });
 
-    // Update Top Boss HUD
     const bossHud = document.getElementById('boss-hud');
     if (activeBoss) {
         bossHud.classList.remove('hidden');
@@ -1140,14 +1018,10 @@ function update() {
         bossHud.classList.remove('flex');
     }
 
-    // 5. Enemy Projectiles
     for (let i = projectiles.length - 1; i >= 0; i--) {
         const p = projectiles[i];
         if (!p) continue;
-        p.x += p.vx;
-        p.y += p.vy;
-        p.life--;
-
+        p.x += p.vx; p.y += p.vy; p.life--;
         if (Math.hypot(p.x - player.x, p.y - player.y) < p.r + player.r && player.invuln <= 0) {
             const respawned = damagePlayer(p.dmg);
             if (respawned) break;
@@ -1157,7 +1031,6 @@ function update() {
         if (p.life <= 0) projectiles.splice(i, 1);
     }
 
-    // 6. Dropped Sacred Materials
     for (let i = droppedItems.length - 1; i >= 0; i--) {
         const item = droppedItems[i];
         if (!item) continue;
@@ -1172,19 +1045,16 @@ function update() {
         }
     }
 
-    // 7. Particles & Floating Texts
     for (let i = particles.length - 1; i >= 0; i--) {
         const pt = particles[i];
         if (!pt) continue;
-        pt.x += pt.vx; pt.y += pt.vy;
-        pt.alpha -= pt.decay;
+        pt.x += pt.vx; pt.y += pt.vy; pt.alpha -= pt.decay;
         if (pt.alpha <= 0) particles.splice(i, 1);
     }
     for (let i = floatingTexts.length - 1; i >= 0; i--) {
         const ft = floatingTexts[i];
         if (!ft) continue;
-        ft.y -= 0.7;
-        ft.life--;
+        ft.y -= 0.7; ft.life--;
         if (ft.life <= 0) floatingTexts.splice(i, 1);
     }
 }
@@ -1200,8 +1070,7 @@ function damagePlayer(dmg) {
     let respawned = false;
     if (player.hp <= 0) {
         player.hp = player.maxHp;
-        player.x = CENTER;
-        player.y = CENTER + 105;
+        player.x = CENTER; player.y = CENTER + 105;
         projectiles.length = 0;
         groundHazards.length = 0;
         addFloatingText(player.x, player.y, "¡Wilder Parra restauró tus PS!", "#4ade80", 13);
@@ -1211,10 +1080,6 @@ function damagePlayer(dmg) {
     updateHealthUI();
     return respawned;
 }
-
-// ============================================================================
-// POKÉMON 2D SPRITE & LUSH NATURE RENDERING ENGINE
-// ============================================================================
 
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -1226,11 +1091,9 @@ function draw() {
     const camY = player.y - canvas.height / 2 + shakeY;
     ctx.translate(-camX, -camY);
 
-    // 1. Vibrant Pokémon Nature Meadow Background
     ctx.fillStyle = '#4caf50';
     ctx.fillRect(0, 0, WORLD_SIZE, WORLD_SIZE);
 
-    // Checkerboard subtle grass texture tiles
     ctx.fillStyle = '#43a047';
     const tile = 96;
     const startX = Math.max(0, Math.floor(camX / tile) * tile);
@@ -1240,36 +1103,25 @@ function draw() {
 
     for (let x = startX; x < endX; x += tile) {
         for (let y = startY; y < endY; y += tile) {
-            if (((x / tile) + (y / tile)) % 2 === 0) {
-                ctx.fillRect(x, y, tile, tile);
-            }
+            if (((x / tile) + (y / tile)) % 2 === 0) ctx.fillRect(x, y, tile, tile);
         }
     }
 
-    // 2. Natural Dirt & Mossy Cobblestone Pokémon Routes
     drawNaturePaths();
-
-    // 3. Draw Themed Nature Clearings (Hub & 3 Boss Sanctuaries)
     drawNatureArena(ZONES.hub, '#66bb6a', '#fde047', 'CLARO DE WILDER PARRA');
     drawNatureArena(ZONES.north, '#2e7d32', '#34d399', 'ARBOLEDA ESMERALDA DE MUZO');
-    drawNatureArena(ZONES.west, '#64748b', '#e2e8f0', 'CLARO ROCOSO DE PLATA');
+    drawNatureArena(ZONES.west, '#64748b', '#e2e8f0', 'CLARO ROCOSO DE PLATA 925');
     drawNatureArena(ZONES.east, '#581c87', '#e879f9', 'JARDÍN MAGNÉTICO DE CUARZO');
 
-    //Crystal Pond near Wilder Parra's Workshop
     drawCrystalPond(CENTER - 175, CENTER + 85);
 
-    // 4. Wildflowers & Swaying Tall Grass
     const wind = Math.sin(globalTick * 0.05) * 3;
     flowers.forEach(f => {
         if (f.x < camX - 30 || f.x > camX + canvas.width + 30 || f.y < camY - 30 || f.y > camY + canvas.height + 30) return;
         ctx.fillStyle = f.color;
-        ctx.beginPath();
-        ctx.arc(f.x, f.y, f.size, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.beginPath(); ctx.arc(f.x, f.y, f.size, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = '#fef08a';
-        ctx.beginPath();
-        ctx.arc(f.x, f.y, f.size * 0.45, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.beginPath(); ctx.arc(f.x, f.y, f.size * 0.45, 0, Math.PI * 2); ctx.fill();
     });
 
     tallGrassPatches.forEach(g => {
@@ -1285,7 +1137,6 @@ function draw() {
         }
     });
 
-    // 5. Ground Hazards (Emerald Root Spikes Warning & Eruption)
     groundHazards.forEach(gh => {
         ctx.save();
         ctx.translate(gh.x, gh.y);
@@ -1293,50 +1144,39 @@ function draw() {
             ctx.strokeStyle = 'rgba(16, 185, 129, 0.85)';
             ctx.fillStyle = 'rgba(16, 185, 129, 0.25)';
             ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.arc(0, 0, gh.r * (gh.timer / 35), 0, Math.PI * 2);
-            ctx.fill(); ctx.stroke();
+            ctx.beginPath(); ctx.arc(0, 0, gh.r * (gh.timer / 35), 0, Math.PI * 2); ctx.fill(); ctx.stroke();
         } else {
             ctx.fillStyle = '#10b981';
             ctx.strokeStyle = '#064e3b';
             ctx.lineWidth = 2;
             for (let k = 0; k < 5; k++) {
                 const a = (Math.PI * 2 / 5) * k;
-                const sx = Math.cos(a) * 14;
-                const sy = Math.sin(a) * 14;
+                const sx = Math.cos(a) * 14; const sy = Math.sin(a) * 14;
                 ctx.beginPath();
-                ctx.moveTo(sx - 7, sy + 6);
-                ctx.lineTo(sx, sy - 22);
-                ctx.lineTo(sx + 7, sy + 6);
-                ctx.closePath();
-                ctx.fill(); ctx.stroke();
+                ctx.moveTo(sx - 7, sy + 6); ctx.lineTo(sx, sy - 22); ctx.lineTo(sx + 7, sy + 6);
+                ctx.closePath(); ctx.fill(); ctx.stroke();
             }
         }
         ctx.restore();
     });
 
-    // 6. Wilder Parra's Outdoor Artisan Workshop & Sprite
     drawWilderWorkshopAndSprite();
 
-    // 7. Dropped Sacred Relics
     droppedItems.forEach(item => {
         ctx.save();
         ctx.translate(item.x, item.y);
         const bounce = Math.sin(item.pulse) * 5;
         ctx.translate(0, bounce);
 
-        // Shadow
         ctx.fillStyle = 'rgba(0,0,0,0.3)';
         ctx.beginPath(); ctx.ellipse(0, 18 - bounce, 14, 6, 0, 0, Math.PI * 2); ctx.fill();
 
-        // Gem / Relic Icon
         ctx.fillStyle = item.color;
         ctx.strokeStyle = '#1e293b';
         ctx.lineWidth = 3;
         ctx.beginPath();
         ctx.moveTo(0, -16); ctx.lineTo(14, 0); ctx.lineTo(0, 16); ctx.lineTo(-14, 0);
-        ctx.closePath();
-        ctx.fill(); ctx.stroke();
+        ctx.closePath(); ctx.fill(); ctx.stroke();
 
         ctx.fillStyle = '#ffffff';
         ctx.beginPath(); ctx.arc(-4, -4, 3, 0, Math.PI * 2); ctx.fill();
@@ -1351,13 +1191,11 @@ function draw() {
         ctx.restore();
     });
 
-    // 8. Pokémon Bosses 2D Models
     bosses.forEach(b => {
         if (!b.alive) return;
         drawPokemonBossSprite(b);
     });
 
-    // 9. Player Quick-Attack Afterimages & Trainer Sprite
     player.afterimages.forEach(img => {
         ctx.save();
         ctx.globalAlpha = img.alpha * 0.6;
@@ -1367,7 +1205,6 @@ function draw() {
 
     drawPlayerTrainerSprite(player.x, player.y, player.facing, player.walkFrame, false);
 
-    // Leaf Blade Slash Arc Animation
     if (player.attackAnim > 0) {
         ctx.save();
         ctx.translate(player.x, player.y);
@@ -1375,33 +1212,24 @@ function draw() {
         ctx.strokeStyle = '#10b981';
         ctx.lineWidth = 8;
         ctx.lineCap = 'round';
-        ctx.beginPath();
-        ctx.arc(0, 0, player.r + 28, -0.95, 0.95);
-        ctx.stroke();
+        ctx.beginPath(); ctx.arc(0, 0, player.r + 28, -0.95, 0.95); ctx.stroke();
 
         ctx.strokeStyle = '#a7f3d0';
         ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.arc(0, 0, player.r + 30, -0.8, 0.8);
-        ctx.stroke();
+        ctx.beginPath(); ctx.arc(0, 0, player.r + 30, -0.8, 0.8); ctx.stroke();
         ctx.restore();
     }
 
-    // 10. Elemental Projectiles (Leaf Gem Bolts, Steel Orbs, Electric Arcs)
     playerBolts.forEach(b => {
         ctx.save();
         ctx.translate(b.x, b.y);
         ctx.rotate(b.angle);
-        // Glowing Emerald Leaf Blade Projectile
         ctx.fillStyle = '#10b981';
         ctx.strokeStyle = '#064e3b';
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.moveTo(14, 0);
-        ctx.quadraticCurveTo(0, -10, -12, 0);
-        ctx.quadraticCurveTo(0, 10, 14, 0);
+        ctx.moveTo(14, 0); ctx.quadraticCurveTo(0, -10, -12, 0); ctx.quadraticCurveTo(0, 10, 14, 0);
         ctx.fill(); ctx.stroke();
-
         ctx.fillStyle = '#a7f3d0';
         ctx.beginPath(); ctx.arc(2, 0, 3.5, 0, Math.PI * 2); ctx.fill();
         ctx.restore();
@@ -1415,8 +1243,7 @@ function draw() {
             ctx.fillStyle = '#10b981';
             ctx.strokeStyle = '#064e3b';
             ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(0, -p.r); ctx.lineTo(p.r, 0); ctx.lineTo(0, p.r); ctx.lineTo(-p.r, 0);
+            ctx.beginPath(); ctx.moveTo(0, -p.r); ctx.lineTo(p.r, 0); ctx.lineTo(0, p.r); ctx.lineTo(-p.r, 0);
             ctx.closePath(); ctx.fill(); ctx.stroke();
         } else if (p.type === 'steel_orb') {
             ctx.fillStyle = '#cbd5e1';
@@ -1426,7 +1253,6 @@ function draw() {
             ctx.fillStyle = '#ffffff';
             ctx.beginPath(); ctx.arc(-2.5, -2.5, 2.5, 0, Math.PI * 2); ctx.fill();
         } else {
-            // Electric / Magnetic Orb with crackling sparks
             ctx.fillStyle = '#c084fc';
             ctx.strokeStyle = '#fde047';
             ctx.lineWidth = 2.5;
@@ -1435,13 +1261,11 @@ function draw() {
         ctx.restore();
     });
 
-    // 11. Pokémon Lush Trees & Crystal Outcrops
     trees.forEach(t => {
         if (t.x < camX - 70 || t.x > camX + canvas.width + 70 || t.y < camY - 70 || t.y > camY + canvas.height + 70) return;
         drawNatureObstacle(t);
     });
 
-    // 12. Particles & Floating Combat Texts
     particles.forEach(pt => {
         ctx.save();
         ctx.globalAlpha = Math.max(0, pt.alpha);
@@ -1465,68 +1289,49 @@ function draw() {
 
     ctx.restore();
 
-    // 13. Screen-Space Navigation Compass
-    if (gameState === 'PLAYING') {
-        drawNavigationCompass();
-    }
+    if (gameState === 'PLAYING') drawNavigationCompass();
 }
-
-// --- DETAILED SPRITE DRAWING FUNCTIONS ---
 
 function drawPlayerTrainerSprite(x, y, facing, walkFrame, isGhost) {
     ctx.save();
     ctx.translate(x, y);
 
-    if (!isGhost && player.invuln > 0 && Math.floor(player.invuln / 3) % 2 === 0) {
-        ctx.globalAlpha = 0.45;
-    }
+    if (!isGhost && player.invuln > 0 && Math.floor(player.invuln / 3) % 2 === 0) ctx.globalAlpha = 0.45;
 
     const swing = player.isMoving ? Math.sin(walkFrame) * 5 : 0;
     const bob = player.isMoving ? Math.abs(Math.cos(walkFrame)) * 2.5 : Math.sin(globalTick * 0.08) * 1;
 
-    // Ground Shadow
     ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
-    ctx.beginPath();
-    ctx.ellipse(0, 17, 13, 6, 0, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.beginPath(); ctx.ellipse(0, 17, 13, 6, 0, 0, Math.PI * 2); ctx.fill();
 
     ctx.translate(0, -bob);
     ctx.lineWidth = 2.2;
     ctx.strokeStyle = '#0f172a';
 
-    // Boots / Feet
     ctx.fillStyle = '#334155';
     ctx.beginPath();
     ctx.arc(-5, 12 + swing * 0.6, 4.5, 0, Math.PI * 2);
     ctx.arc(5, 12 - swing * 0.6, 4.5, 0, Math.PI * 2);
     ctx.fill(); ctx.stroke();
 
-    // Explorer Cape & Backpack
     if (facing === 'up') {
         ctx.fillStyle = '#d97706';
         ctx.fillRect(-9, -4, 18, 14);
         ctx.strokeRect(-9, -4, 18, 14);
     } else {
         ctx.fillStyle = '#047857';
-        ctx.beginPath();
-        ctx.roundRect(-11, -3, 22, 15, 5);
-        ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.roundRect(-11, -3, 22, 15, 5); ctx.fill(); ctx.stroke();
     }
 
-    // Arms
     ctx.fillStyle = '#fde68a';
     ctx.beginPath();
     ctx.arc(-11, 2 - swing * 0.5, 4, 0, Math.PI * 2);
     ctx.arc(11, 2 + swing * 0.5, 4, 0, Math.PI * 2);
     ctx.fill(); ctx.stroke();
 
-    // Chibi Head
     ctx.fillStyle = '#fde68a';
-    ctx.beginPath();
-    ctx.arc(0, -9, 11.5, 0, Math.PI * 2);
-    ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, -9, 11.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
 
-    // Expressive Pokémon Trainer Eyes
     if (facing !== 'up') {
         const eyeOffsetX = facing === 'left' ? -3 : (facing === 'right' ? 3 : 0);
         ctx.fillStyle = '#0f172a';
@@ -1541,14 +1346,9 @@ function drawPlayerTrainerSprite(x, y, facing, walkFrame, isGhost) {
         ctx.fill();
     }
 
-    // Emerald Pokémon Trainer Cap & Gold Emblem
     ctx.fillStyle = '#10b981';
-    ctx.beginPath();
-    ctx.arc(0, -12, 12, Math.PI, 0);
-    ctx.closePath();
-    ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, -12, 12, Math.PI, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
 
-    // Cap Visor
     ctx.fillStyle = '#059669';
     if (facing === 'down') {
         ctx.beginPath(); ctx.ellipse(0, -11, 11, 4, 0, 0, Math.PI); ctx.fill(); ctx.stroke();
@@ -1558,12 +1358,8 @@ function drawPlayerTrainerSprite(x, y, facing, walkFrame, isGhost) {
         ctx.beginPath(); ctx.ellipse(8, -11, 6, 3.5, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
     }
 
-    // Wepora Gem Badge on Cap
     ctx.fillStyle = '#fde047';
-    ctx.beginPath();
-    ctx.arc(0, -15, 2.5, 0, Math.PI * 2);
-    ctx.fill();
-
+    ctx.beginPath(); ctx.arc(0, -15, 2.5, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
 }
 
@@ -1571,68 +1367,46 @@ function drawWilderWorkshopAndSprite() {
     ctx.save();
     ctx.translate(wilder.x, wilder.y);
 
-    // Artisanal Rug under Workshop
     ctx.fillStyle = '#065f46';
     ctx.strokeStyle = '#fbbf24';
     ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.roundRect(-68, -20, 136, 86, 12);
-    ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.roundRect(-68, -20, 136, 86, 12); ctx.fill(); ctx.stroke();
 
-    // Wooden Jewelry Workbench
     ctx.fillStyle = '#92400e';
     ctx.strokeStyle = '#1e293b';
     ctx.lineWidth = 2.5;
-    ctx.beginPath();
-    ctx.roundRect(-48, 22, 96, 26, 5);
-    ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.roundRect(-48, 22, 96, 26, 5); ctx.fill(); ctx.stroke();
 
-    // Silver Anvil & Emerald Gems on Table
     ctx.fillStyle = '#cbd5e1';
     ctx.fillRect(-30, 27, 18, 12);
     ctx.strokeRect(-30, 27, 18, 12);
 
     ctx.fillStyle = '#10b981';
-    ctx.beginPath();
-    ctx.arc(18, 33, 5, 0, Math.PI * 2);
-    ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.arc(18, 33, 5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
 
-    // Wilder Parra Chibi Sprite (Master Jeweler)
     const bob = Math.sin(globalTick * 0.07) * 1.5;
     ctx.save();
     ctx.translate(0, bob);
 
-    // Shadow
     ctx.fillStyle = 'rgba(0,0,0,0.28)';
     ctx.beginPath(); ctx.ellipse(0, 18 - bob, 14, 6, 0, 0, Math.PI * 2); ctx.fill();
 
     ctx.strokeStyle = '#0f172a';
     ctx.lineWidth = 2.2;
 
-    // Master Goldsmith Apron & Torso
     ctx.fillStyle = '#047857';
-    ctx.beginPath();
-    ctx.roundRect(-12, -2, 24, 18, 6);
-    ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.roundRect(-12, -2, 24, 18, 6); ctx.fill(); ctx.stroke();
 
-    // Gold Apron Trim
     ctx.fillStyle = '#fbbf24';
     ctx.fillRect(-7, 2, 14, 12);
     ctx.strokeRect(-7, 2, 14, 12);
 
-    // Head
     ctx.fillStyle = '#fde68a';
-    ctx.beginPath();
-    ctx.arc(0, -11, 12, 0, Math.PI * 2);
-    ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, -11, 12, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
 
-    // Hair & Beard
     ctx.fillStyle = '#334155';
-    ctx.beginPath();
-    ctx.arc(0, -14, 12, Math.PI, 0);
-    ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, -14, 12, Math.PI, 0); ctx.fill(); ctx.stroke();
 
-    // Jeweler's Magnifying Loupe & Glasses
     ctx.fillStyle = '#ffffff';
     ctx.beginPath(); ctx.arc(-4.5, -10, 3.2, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
     ctx.fillStyle = '#38bdf8';
@@ -1641,14 +1415,11 @@ function drawWilderWorkshopAndSprite() {
     ctx.lineWidth = 2.5;
     ctx.stroke();
 
-    // Floating Exclamation / Quest Bubble above Wilder
     const allMats = player.materials.emerald && player.materials.silver && player.materials.thread;
     ctx.fillStyle = allMats ? '#fde047' : '#ffffff';
     ctx.strokeStyle = '#0f172a';
     ctx.lineWidth = 2.2;
-    ctx.beginPath();
-    ctx.arc(0, -36, 10, 0, Math.PI * 2);
-    ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.arc(0, -36, 10, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
 
     ctx.fillStyle = '#0f172a';
     ctx.font = '900 13px Inter, sans-serif';
@@ -1656,7 +1427,6 @@ function drawWilderWorkshopAndSprite() {
     ctx.fillText(allMats ? '★' : '!', 0, -31);
     ctx.restore();
 
-    // Nameplate
     ctx.font = '800 12px Inter, sans-serif';
     ctx.textAlign = 'center';
     ctx.strokeStyle = '#0f172a';
@@ -1674,112 +1444,72 @@ function drawPokemonBossSprite(b) {
 
     const floatY = Math.sin(globalTick * 0.08 + b.x) * 4;
 
-    // Ground Shadow
     ctx.fillStyle = 'rgba(0, 0, 0, 0.32)';
-    ctx.beginPath();
-    ctx.ellipse(0, b.r + 6, b.r * 0.85, 12, 0, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.beginPath(); ctx.ellipse(0, b.r + 6, b.r * 0.85, 12, 0, 0, Math.PI * 2); ctx.fill();
 
     ctx.translate(0, floatY);
-    if (b.hitFlash > 0) {
-        ctx.filter = 'brightness(2.2)';
-    }
+    if (b.hitFlash > 0) ctx.filter = 'brightness(2.2)';
 
     ctx.strokeStyle = '#0f172a';
     ctx.lineWidth = 3;
 
     if (b.id === 'emerald') {
-        // BOSS 1: ESMERALDÓN (Rock/Grass Legendary Golem of Muzo)
         const handOffset = Math.sin(globalTick * 0.1) * 6;
-
-        // Floating Mossy Emerald Fists
         ctx.fillStyle = '#047857';
         ctx.beginPath();
         ctx.arc(-b.r - 12, 6 + handOffset, 13, 0, Math.PI * 2);
         ctx.arc(b.r + 12, 6 - handOffset, 13, 0, Math.PI * 2);
         ctx.fill(); ctx.stroke();
 
-        // Faceted Crystal Body
         ctx.fillStyle = '#059669';
         ctx.beginPath();
-        ctx.moveTo(0, -b.r - 8);
-        ctx.lineTo(b.r, -12);
-        ctx.lineTo(b.r * 0.8, b.r);
-        ctx.lineTo(-b.r * 0.8, b.r);
-        ctx.lineTo(-b.r, -12);
-        ctx.closePath();
-        ctx.fill(); ctx.stroke();
+        ctx.moveTo(0, -b.r - 8); ctx.lineTo(b.r, -12); ctx.lineTo(b.r * 0.8, b.r); ctx.lineTo(-b.r * 0.8, b.r); ctx.lineTo(-b.r, -12);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
 
-        // Inner Muzo Emerald Core
         ctx.fillStyle = '#34d399';
         ctx.beginPath();
-        ctx.moveTo(0, -b.r + 8);
-        ctx.lineTo(b.r * 0.55, -6);
-        ctx.lineTo(0, b.r - 10);
-        ctx.lineTo(-b.r * 0.55, -6);
-        ctx.closePath();
-        ctx.fill();
+        ctx.moveTo(0, -b.r + 8); ctx.lineTo(b.r * 0.55, -6); ctx.lineTo(0, b.r - 10); ctx.lineTo(-b.r * 0.55, -6);
+        ctx.closePath(); ctx.fill();
 
-        // Crystal Crown Horns
         ctx.fillStyle = '#6ee7b7';
         ctx.beginPath();
         ctx.moveTo(-18, -b.r + 4); ctx.lineTo(-28, -b.r - 18); ctx.lineTo(-6, -b.r);
         ctx.moveTo(18, -b.r + 4); ctx.lineTo(28, -b.r - 18); ctx.lineTo(6, -b.r);
         ctx.fill(); ctx.stroke();
 
-        // Fierce Pokémon Eyes
         ctx.fillStyle = '#fde047';
         ctx.beginPath();
         ctx.moveTo(-16, -10); ctx.lineTo(-5, -6); ctx.lineTo(-14, -2); ctx.closePath();
         ctx.moveTo(16, -10); ctx.lineTo(5, -6); ctx.lineTo(14, -2); ctx.closePath();
         ctx.fill(); ctx.stroke();
-
     } else if (b.id === 'silver') {
-        // BOSS 2: ARGENTAGRON (Steel/Rock Armored Beast)
-        // Heavy Metallic Tail
         const tailWag = Math.sin(globalTick * 0.12) * 8;
         ctx.fillStyle = '#64748b';
         ctx.beginPath();
-        ctx.moveTo(0, b.r - 5);
-        ctx.lineTo(28 + tailWag, b.r + 18);
-        ctx.lineTo(8 + tailWag, b.r + 24);
-        ctx.closePath();
-        ctx.fill(); ctx.stroke();
+        ctx.moveTo(0, b.r - 5); ctx.lineTo(28 + tailWag, b.r + 18); ctx.lineTo(8 + tailWag, b.r + 24);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
 
-        // Chrome Spiked Pauldrons (Shoulders)
         ctx.fillStyle = '#94a3b8';
         ctx.beginPath();
         ctx.arc(-b.r + 4, -4, 18, 0, Math.PI * 2);
         ctx.arc(b.r - 4, -4, 18, 0, Math.PI * 2);
         ctx.fill(); ctx.stroke();
 
-        // Main Silver 925 Armored Carapace
         ctx.fillStyle = '#cbd5e1';
-        ctx.beginPath();
-        ctx.arc(0, 0, b.r - 4, 0, Math.PI * 2);
-        ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.arc(0, 0, b.r - 4, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
 
-        // Steel Armor Plates & Horns
         ctx.fillStyle = '#f8fafc';
         ctx.beginPath();
         ctx.moveTo(-22, -24); ctx.lineTo(-34, -42); ctx.lineTo(-10, -30); ctx.closePath();
         ctx.moveTo(22, -24); ctx.lineTo(34, -42); ctx.lineTo(10, -30); ctx.closePath();
         ctx.fill(); ctx.stroke();
 
-        // Glowing Cyan Visor Eyes
         ctx.fillStyle = '#0f172a';
         ctx.fillRect(-20, -14, 40, 12);
         ctx.fillStyle = '#38bdf8';
-        ctx.beginPath();
-        ctx.arc(-10, -8, 4.5, 0, Math.PI * 2);
-        ctx.arc(10, -8, 4.5, 0, Math.PI * 2);
-        ctx.fill();
-
+        ctx.beginPath(); ctx.arc(-10, -8, 4.5, 0, Math.PI * 2); ctx.arc(10, -8, 4.5, 0, Math.PI * 2); ctx.fill();
     } else {
-        // BOSS 3: MAGNECUARZO (Electric/Psychic Floating Quartz & U-Magnets)
         const orbitAng = globalTick * 0.06;
-
-        // 2 Orbiting Bipolar U-Magnets (Red North / Blue South)
         for (let m = 0; m < 2; m++) {
             const ma = orbitAng + m * Math.PI;
             const mx = Math.cos(ma) * (b.r + 14);
@@ -1787,11 +1517,8 @@ function drawPokemonBossSprite(b) {
             ctx.save();
             ctx.translate(mx, my);
             ctx.rotate(ma + Math.PI / 2);
-            // Magnet base
             ctx.fillStyle = '#94a3b8';
-            ctx.fillRect(-9, -6, 18, 12);
-            ctx.strokeRect(-9, -6, 18, 12);
-            // Red & Blue tips
+            ctx.fillRect(-9, -6, 18, 12); ctx.strokeRect(-9, -6, 18, 12);
             ctx.fillStyle = '#ef4444';
             ctx.fillRect(-9, -12, 7, 6); ctx.strokeRect(-9, -12, 7, 6);
             ctx.fillStyle = '#3b82f6';
@@ -1799,20 +1526,16 @@ function drawPokemonBossSprite(b) {
             ctx.restore();
         }
 
-        // Rose/Mystic Quartz Crystalline Core
         ctx.fillStyle = '#d8b4fe';
         ctx.beginPath();
         for (let i = 0; i < 8; i++) {
             const a = (Math.PI / 4) * i;
             const rad = i % 2 === 0 ? b.r : b.r * 0.72;
-            const px = Math.cos(a) * rad;
-            const py = Math.sin(a) * rad;
+            const px = Math.cos(a) * rad; const py = Math.sin(a) * rad;
             if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
         }
-        ctx.closePath();
-        ctx.fill(); ctx.stroke();
+        ctx.closePath(); ctx.fill(); ctx.stroke();
 
-        // Central Psychic Eye
         ctx.fillStyle = '#ffffff';
         ctx.beginPath(); ctx.arc(0, 0, 13, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
         ctx.fillStyle = '#ec4899';
@@ -1823,27 +1546,19 @@ function drawPokemonBossSprite(b) {
 
     ctx.filter = 'none';
 
-    // Overhead Pokémon HP Bar on Boss
     const barW = 76;
     const hpRatio = Math.max(0, b.hp / b.maxHp);
     ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-    ctx.beginPath();
-    ctx.roundRect(-barW / 2 - 2, -b.r - 28, barW + 4, 10, 4);
-    ctx.fill();
+    ctx.beginPath(); ctx.roundRect(-barW / 2 - 2, -b.r - 28, barW + 4, 10, 4); ctx.fill();
 
     ctx.fillStyle = hpRatio > 0.5 ? '#22c55e' : (hpRatio > 0.22 ? '#facc15' : '#ef4444');
-    ctx.beginPath();
-    ctx.roundRect(-barW / 2, -b.r - 26, barW * hpRatio, 6, 3);
-    ctx.fill();
+    ctx.beginPath(); ctx.roundRect(-barW / 2, -b.r - 26, barW * hpRatio, 6, 3); ctx.fill();
 
     ctx.restore();
 }
 
-// --- NATURE ENVIRONMENT HELPERS ---
-
 function drawNaturePaths() {
     ctx.save();
-    // Sandy Dirt Route Border
     ctx.strokeStyle = '#ca8a04';
     ctx.lineWidth = 104;
     ctx.lineCap = 'round';
@@ -1852,7 +1567,6 @@ function drawNaturePaths() {
     ctx.moveTo(ZONES.west.x, CENTER); ctx.lineTo(ZONES.east.x, CENTER);
     ctx.stroke();
 
-    // Inner Warm Dirt Path
     ctx.strokeStyle = '#fde047';
     ctx.globalAlpha = 0.45;
     ctx.lineWidth = 88;
@@ -1889,15 +1603,12 @@ function drawNatureArena(zone, baseColor, rimColor, title) {
 function drawCrystalPond(x, y) {
     ctx.save();
     ctx.translate(x, y);
-    // Sandy bank
     ctx.fillStyle = '#fde68a';
     ctx.beginPath(); ctx.ellipse(0, 0, 78, 52, 0, 0, Math.PI * 2); ctx.fill();
-    // Water
     ctx.fillStyle = '#38bdf8';
     ctx.strokeStyle = '#0284c7';
     ctx.lineWidth = 3;
     ctx.beginPath(); ctx.ellipse(0, 0, 68, 42, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-    // Animated water ripples
     const rPulse = (globalTick % 60) / 60;
     ctx.strokeStyle = `rgba(255,255,255,${1 - rPulse})`;
     ctx.lineWidth = 2;
@@ -1909,31 +1620,22 @@ function drawNatureObstacle(t) {
     ctx.save();
     ctx.translate(t.x, t.y);
 
-    // Ground Shadow
     ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
-    ctx.beginPath();
-    ctx.ellipse(0, t.r * 0.65, t.r * 0.95, t.r * 0.45, 0, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.beginPath(); ctx.ellipse(0, t.r * 0.65, t.r * 0.95, t.r * 0.45, 0, 0, Math.PI * 2); ctx.fill();
 
     ctx.strokeStyle = '#0f172a';
     ctx.lineWidth = 2.5;
 
     if (t.type === 'oak_tree' || t.type === 'pine_tree') {
-        // Trunk
         ctx.fillStyle = '#78350f';
         ctx.fillRect(-t.r * 0.28, 0, t.r * 0.56, t.r * 0.65);
         ctx.strokeRect(-t.r * 0.28, 0, t.r * 0.56, t.r * 0.65);
 
-        // Lush Pokémon Multi-layered Canopy
         ctx.fillStyle = t.type === 'oak_tree' ? '#15803d' : '#065f46';
-        ctx.beginPath();
-        ctx.arc(0, -t.r * 0.2, t.r * 0.95, 0, Math.PI * 2);
-        ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.arc(0, -t.r * 0.2, t.r * 0.95, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
 
         ctx.fillStyle = t.type === 'oak_tree' ? '#22c55e' : '#10b981';
-        ctx.beginPath();
-        ctx.arc(-t.r * 0.15, -t.r * 0.38, t.r * 0.72, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.beginPath(); ctx.arc(-t.r * 0.15, -t.r * 0.38, t.r * 0.72, 0, Math.PI * 2); ctx.fill();
     } else if (t.type === 'emerald_outcrop') {
         ctx.fillStyle = '#10b981';
         ctx.beginPath();
@@ -1941,17 +1643,13 @@ function drawNatureObstacle(t) {
         ctx.closePath(); ctx.fill(); ctx.stroke();
     } else if (t.type === 'silver_boulder') {
         ctx.fillStyle = '#94a3b8';
-        ctx.beginPath();
-        ctx.arc(0, 0, t.r * 0.85, 0, Math.PI * 2);
-        ctx.fill(); ctx.stroke();
+        ctx.beginPath(); ctx.arc(0, 0, t.r * 0.85, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
     } else {
-        // Quartz Cluster
         ctx.fillStyle = '#d8b4fe';
         ctx.beginPath();
         ctx.moveTo(0, -t.r); ctx.lineTo(t.r * 0.75, t.r * 0.5); ctx.lineTo(-t.r * 0.75, t.r * 0.5);
         ctx.closePath(); ctx.fill(); ctx.stroke();
     }
-
     ctx.restore();
 }
 
@@ -1960,9 +1658,7 @@ function drawNavigationCompass() {
     const m = player.materials;
 
     bosses.forEach(b => {
-        if (b.alive) {
-            targets.push({ x: b.x, y: b.y, color: b.color, label: b.name.split(' ')[0] });
-        }
+        if (b.alive) targets.push({ x: b.x, y: b.y, color: b.color, label: b.name.split(' ')[0] });
     });
     droppedItems.forEach(item => {
         targets.push({ x: item.x, y: item.y, color: '#fde047', label: item.name });
@@ -1971,16 +1667,15 @@ function drawNavigationCompass() {
     const allCollected = m.emerald && m.silver && m.thread;
     if (allCollected || Math.hypot(player.x - wilder.x, player.y - wilder.y) > 420) {
         targets.push({
-            x: wilder.x,
-            y: wilder.y,
+            x: wilder.x, y: wilder.y,
             color: allCollected ? '#fde047' : '#34d399',
-            label: allCollected ? '¡Llevar a Wilder Parra!' : 'Taller (Wilder)'
+            label: allCollected ? '¡Llevar a Wilder!' : 'Taller'
         });
     }
 
     const cx = canvas.width / 2;
     const cy = canvas.height / 2;
-    const radius = Math.min(cx, cy) - 72;
+    const radius = Math.min(cx, cy) - 64;
 
     targets.forEach(t => {
         const dist = Math.hypot(t.x - player.x, t.y - player.y);
@@ -1997,11 +1692,8 @@ function drawNavigationCompass() {
         ctx.strokeStyle = '#0f172a';
         ctx.lineWidth = 2.5;
         ctx.beginPath();
-        ctx.moveTo(13, 0);
-        ctx.lineTo(-9, -8);
-        ctx.lineTo(-9, 8);
-        ctx.closePath();
-        ctx.fill(); ctx.stroke();
+        ctx.moveTo(13, 0); ctx.lineTo(-9, -8); ctx.lineTo(-9, 8);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
 
         ctx.rotate(-ang);
         ctx.font = '800 11px Inter, sans-serif';
@@ -2015,7 +1707,6 @@ function drawNavigationCompass() {
     });
 }
 
-// --- MAIN LOOP & UI EVENTS ---
 function gameLoop() {
     update();
     draw();
@@ -2039,11 +1730,6 @@ document.getElementById('replay-btn').addEventListener('click', () => {
     gameState = 'PLAYING';
 });
 
-const ghModal = document.getElementById('github-modal');
-document.getElementById('github-modal-btn').addEventListener('click', () => ghModal.classList.remove('hidden'));
-document.getElementById('close-github-btn').addEventListener('click', () => ghModal.classList.add('hidden'));
-document.getElementById('close-github-btn-2').addEventListener('click', () => ghModal.classList.add('hidden'));
-
 window.onload = function () {
     initWorld();
     gameLoop();
@@ -2051,3 +1737,11 @@ window.onload = function () {
 </script>
 </body>
 </html>
+```
+eof
+
+### Cambios realizados para dispositivos móviles:
+1. **Aviso de orientación horizontal (`#rotate-warning`)**: Si un usuario abre el juego en un celular en vertical, aparecerá automáticamente una pantalla solicitando girar el dispositivo en horizontal para disfrutar de la mejor vista del canvas y los controles.
+2. **Reubicación y ajuste de botones táctiles**: Los botones de acción (`HABLAR`, `DASH`, `HOJA GEMA`) y el Pad direccional se han ajustado en tamaño, escala y márgenes seguros para evitar que queden cortados o debajo de la barra de navegación del móvil.
+3. **Paneles del HUD optimizados**: Las cajas de estado del jugador, la barra del jefe y los iconos de la mochila se han hecho ligeramente más compactos en pantallas pequeñas para que no se superpongan entre sí.
+4. **Pantalla principal limpia**: Se eliminó por completo el modal y el botón de instrucciones de GitHub de la portada, dejando una bienvenida directa, elegante y enfocada 100% en el juego.
